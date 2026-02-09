@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Netflix</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <style>
+        body, html { 
+            background-color: #000; color: white; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; 
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #b9060b; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 1000; 
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #b9060b; display: none; flex-direction: column; 
+            align-items: center; padding-top: 60px; z-index: 500;
+        }
+
+        /* --- MAIN CONTENT --- */
+        #main-content { display: none; height: 100%; overflow-y: auto; }
+        
+        .header {
+            background: linear-gradient(to bottom, #2b2b2b 0%, #000000 100%);
+            text-align: center; padding: 12px 0; border-bottom: 1px solid #333;
+            position: relative;
+        }
+
+        .header-logo { height: 30px; width: auto; }
+
+        /* SETTINGS BUTTON */
+        .settings-btn {
+            position: absolute; right: 15px; top: 15px;
+            font-size: 20px; color: #666; cursor: pointer;
+        }
+
+        .container { padding: 10px; }
+        .row-title { font-size: 15px; font-weight: bold; margin: 15px 0 10px 10px; color: #e5e5e5; }
+        
+        .movie-row { 
+            display: flex; overflow-x: auto; gap: 15px; 
+            padding-left: 15px; padding-bottom: 40px; 
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        .movie-container { text-align: center; }
+
+        .poster { 
+            min-width: 105px; height: 155px; background: #1a1a1a; 
+            border: 1px solid #222; border-radius: 2px;
+            -webkit-box-reflect: below 2px linear-gradient(transparent, transparent 70%, rgba(255, 255, 255, 0.1));
+        }
+        .poster img { width: 100%; height: 100%; object-fit: cover; }
+
+        .movie-name { font-size: 12px; margin-top: 8px; color: #ccc; width: 105px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- SETTINGS MODAL --- */
+        #settings-panel {
+            display: none; position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+            z-index: 2000; padding: 20px; box-sizing: border-box;
+            overflow-y: auto;
+        }
+        
+        .settings-input {
+            width: 100%; padding: 10px; margin-bottom: 10px;
+            background: #222; color: white; border: 1px solid #444; border-radius: 4px;
+        }
+
+        .save-btn {
+            width: 100%; padding: 15px; background: #b9060b;
+            color: white; border: none; border-radius: 5px; font-weight: bold;
+        }
+
+        /* Shared login style */
+        .login-box { width: 85%; margin-top: 30px; }
+        input[type="email"], input[type="password"] {
+            width: 100%; padding: 12px; margin-bottom: 20px;
+            border-radius: 5px; border: 1px solid #fff; font-size: 16px; box-sizing: border-box;
+        }
+        .sign-in-btn {
+            width: 100%; padding: 12px; border-radius: 5px; font-weight: bold;
+            background: linear-gradient(to bottom, #fefefe 0%, #d1d1d1 100%); color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <img src="flix.png" style="width:180px;">
+        <p style="margin-top:20px; font-size:12px;">LOADING...</p>
+    </div>
+
+    <div id="login-screen">
+        <img src="flix.png" style="width:180px;">
+        <div class="login-box">
+            <input type="email" placeholder="Email" id="email">
+            <input type="password" placeholder="Password" id="pass">
+            <button class="sign-in-btn" onclick="goToGallery()">Sign In</button>
+        </div>
+    </div>
+
+    <div id="settings-panel">
+        <h2>Movie Titles</h2>
+        <p>Change how names appear under posters:</p>
+        <input type="text" id="edit-m1" class="settings-input" placeholder="Name for Movie 1">
+        <input type="text" id="edit-m2" class="settings-input" placeholder="Name for BTTF">
+        <input type="text" id="edit-m3" class="settings-input" placeholder="Name for BTTF3">
+        <input type="text" id="edit-m4" class="settings-input" placeholder="Name for BIRD">
+        <input type="text" id="edit-m5" class="settings-input" placeholder="Name for CRED">
+        <button class="save-btn" onclick="saveSettings()">SAVE & CLOSE</button>
+    </div>
+
+    <div id="main-content">
+        <div class="header">
+            <img src="flix.png" class="header-logo">
+            <div class="settings-btn" onclick="toggleSettings()">⚙</div>
+        </div>
+        <div class="container">
+            <div class="row-title">Recently Watched</div>
+            <div class="movie-row">
+                <div class="movie-container">
+                    <a href="Movie1.mp4" class="poster"><img src="Movie1.jpg"></a>
+                    <div id="display-m1" class="movie-name">Movie 1</div>
+                </div>
+                <div class="movie-container">
+                    <a href="BTTF.mp4" class="poster"><img src="BTTF.jpg"></a>
+                    <div id="display-m2" class="movie-name">Back to the Future</div>
+                </div>
+                <div class="movie-container">
+                    <a href="BTTF3.mp4" class="poster"><img src="BTTF3.jpg"></a>
+                    <div id="display-m3" class="movie-name">BTTF 3</div>
+                </div>
+                <div class="movie-container">
+                    <a href="BIRD.mp4" class="poster"><img src="BIRD.jpg"></a>
+                    <div id="display-m4" class="movie-name">Bird</div>
+                </div>
+                <div class="movie-container">
+                    <a href="CRED.mp4" class="poster"><img src="CRED2.jpg"></a>
+                    <div id="display-m5" class="movie-name">Credits</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Loading Timer
+        setTimeout(function() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }, 5000);
+
+        // 2. Login
+        function goToGallery() {
+            if(document.getElementById('email').value !== "" && document.getElementById('pass').value !== "") {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                loadSettings(); // Load the names you saved
+            }
+        }
+
+        // 3. Settings Controls
+        function toggleSettings() {
+            var panel = document.getElementById('settings-panel');
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function saveSettings() {
+            // Save to browser memory
+            localStorage.setItem('m1', document.getElementById('edit-m1').value);
+            localStorage.setItem('m2', document.getElementById('edit-m2').value);
+            localStorage.setItem('m3', document.getElementById('edit-m3').value);
+            localStorage.setItem('m4', document.getElementById('edit-m4').value);
+            localStorage.setItem('m5', document.getElementById('edit-m5').value);
+            
+            loadSettings(); // Update display
+            toggleSettings(); // Close panel
+        }
+
+        function loadSettings() {
+            // Pull from memory and put on screen
+            if(localStorage.getItem('m1')) document.getElementById('display-m1').innerText = localStorage.getItem('m1');
+            if(localStorage.getItem('m2')) document.getElementById('display-m2').innerText = localStorage.getItem('m2');
+            if(localStorage.getItem('m3')) document.getElementById('display-m3').innerText = localStorage.getItem('m3');
+            if(localStorage.getItem('m4')) document.getElementById('display-m4').innerText = localStorage.getItem('m4');
+            if(localStorage.getItem('m5')) document.getElementById('display-m5').innerText = localStorage.getItem('m5');
+        }
+    </script>
+
+</body>
+</html>
