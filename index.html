@@ -1,144 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Netflix</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="UTF-8">
+    <title>Netflix Clone</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            background-color: #000; color: white; overflow-x: hidden;
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: #fff; font-family: Arial, sans-serif; overflow-x: hidden; }
+        
+        /* Loading Screen */
+        #loading-screen { 
+            position: fixed; width: 100%; height: 100%; background: #b1060f; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; 
+        }
+        #force-btn { 
+            margin-top: 20px; padding: 10px; background: white; color: black; 
+            border: none; border-radius: 5px; display: none; cursor: pointer;
         }
 
-        /* --- LOADING SCREEN --- */
-        #loading-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #b1060f; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; z-index: 1000; 
-        }
-        .spinner {
-            width: 40px; height: 40px; margin-top: 30px;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/d/de/Ajax-loader.gif');
-            background-size: contain; background-repeat: no-repeat;
-        }
+        /* Login Screen */
+        #login-screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #b1060f; }
+        .login-box { width: 80%; max-width: 300px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 4px; border: none; box-sizing: border-box; }
+        .btn-red { width: 100%; padding: 12px; background: #e50914; color: white; border: none; font-weight: bold; cursor: pointer; }
 
-        /* --- LOGIN SCREEN --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #b1060f; display: none; flex-direction: column; 
-            align-items: center; padding-top: 45px; z-index: 500;
-        }
-        .login-logo { width: 190px; margin-bottom: 35px; }
-        .input-group { width: 82%; max-width: 290px; }
-        input { 
-            width: 100%; padding: 11px; margin-bottom: 18px; border-radius: 4px; 
-            border: 1px solid #888; font-size: 16px; box-sizing: border-box; background: white; color: black;
-        }
-        .sign-in-btn { 
-            width: 100%; padding: 12px; background: #e50914; border: none; 
-            border-radius: 4px; font-weight: bold; color: white; font-size: 18px; cursor: pointer;
-        }
+        /* Profile Screen */
+        #profile-screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        .avatar { width: 100px; height: 100px; background: #e50914; border-radius: 4px; cursor: pointer; margin-bottom: 10px; }
 
-        /* --- PROFILE SCREEN --- */
-        #profile-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: none; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 600;
-        }
-        .profile-icon { 
-            width: 100px; height: 100px; border-radius: 4px; margin-bottom: 10px;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png');
-            background-size: cover;
-        }
-
-        /* --- MAIN APP --- */
-        #main-content { display: none; height: 100%; background-color: #000; overflow-y: auto; padding-bottom: 80px; }
-        .header { text-align: center; padding: 15px 0; background: #000; }
-        .row-title { font-size: 18px; font-weight: bold; margin: 20px 10px 10px; }
-
-        .movie-row {
-            display: flex; overflow-x: auto; gap: 10px; padding: 0 10px;
-            scrollbar-width: none; /* Hide scrollbar for clean look */
-        }
-        .movie-row::-webkit-scrollbar { display: none; }
-
-        .movie-item { flex: 0 0 120px; text-decoration: none; color: white; }
-        .poster { width: 120px; height: 170px; background: #222; border-radius: 4px; object-fit: cover; }
-        .m-title { font-size: 12px; margin-top: 5px; text-align: center; font-weight: bold; }
-
-        .tab-bar {
-            position: fixed; bottom: 0; width: 100%; height: 60px;
-            background: #111; display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid #333;
-        }
+        /* Main Content */
+        #main-content { display: none; padding: 20px 0; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .row { display: flex; overflow-x: auto; padding: 10px; gap: 10px; }
+        .movie { flex: 0 0 120px; text-align: center; text-decoration: none; color: white; }
+        .movie img { width: 120px; height: 170px; object-fit: cover; border-radius: 4px; background: #222; }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" style="width:180px;">
-        <div class="spinner"></div>
+        <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" width="150" alt="Logo">
+        <div id="status">Loading...</div>
+        <button id="force-btn" onclick="startApp()">Click to Start Manually</button>
     </div>
 
     <div id="login-screen">
-        <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" class="login-logo">
-        <div class="input-group">
-            <input type="text" placeholder="Email or phone number">
+        <div class="login-box">
+            <input type="text" placeholder="Email">
             <input type="password" placeholder="Password">
-            <button class="sign-in-btn" onclick="showProfiles()">Sign In</button>
+            <button class="btn-red" onclick="showProfiles()">Sign In</button>
         </div>
     </div>
 
     <div id="profile-screen">
-        <div onclick="enterApp()" style="text-align:center; cursor:pointer;">
-            <div class="profile-icon"></div>
-            <div style="font-size:18px;">John</div>
+        <div onclick="enterApp()">
+            <div class="avatar"></div>
+            <div style="text-align:center">John</div>
         </div>
     </div>
 
     <div id="main-content">
         <div class="header">
-            <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" style="height:30px;">
+            <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" height="30">
         </div>
-
-        <div class="row-title">My List</div>
-        <div class="movie-row">
-
-            <a href="https://drive.google.com/uc?export=download&id=1FPuWu-t4ouzCOgXlt8c-H4P4IhN7yl0d" class="movie-item">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/310px-Placeholder_view_vector.svg.png" class="poster">
-                <div class="m-title">Movie 1</div>
+        <div style="padding-left:15px">My List</div>
+        <div class="row">
+            <a href="https://drive.google.com/uc?export=download&id=1FPuWu-t4ouzCOgXlt8c-H4P4IhN7yl0d" class="movie">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Placeholder_view_vector.svg" alt="P1">
+                <div>Movie 1</div>
             </a>
-
-            <a href="https://drive.google.com/uc?export=download&id=1XAYVZMwq63Y_VpjxqnNviP7bYPH0C318" class="movie-item">
-                <img src="https://drive.google.com/uc?export=view&id=1Wh7hljbQnIArijR7LkFdsDYKQhCR3fuK" class="poster">
-                <div class="m-title">Fast & Furious</div>
+            <a href="https://drive.google.com/uc?export=download&id=1XAYVZMwq63Y_VpjxqnNviP7bYPH0C318" class="movie">
+                <img src="https://drive.google.com/uc?export=view&id=1Wh7hljbQnIArijR7LkFdsDYKQhCR3fuK" alt="P2">
+                <div>Fast & Furious</div>
             </a>
-
-            <a href="https://drive.google.com/uc?export=download&id=1jZM-wPJxtFB6XVkJE_LduXTo7jTfuKtp" class="movie-item">
-                <img src="https://drive.google.com/uc?export=view&id=1hNe1XrmfNygUFZKpaPcuiMSQyJ2AuEUw" class="poster">
-                <div class="m-title">2 Fast 2 Furious</div>
+            <a href="https://drive.google.com/uc?export=download&id=1jZM-wPJxtFB6XVkJE_LduXTo7jTfuKtp" class="movie">
+                <img src="https://drive.google.com/uc?export=view&id=1hNe1XrmfNygUFZKpaPcuiMSQyJ2AuEUw" alt="P3">
+                <div>2Fast 2Furious</div>
             </a>
-
-        </div>
-
-        <div class="tab-bar">
-            <div style="font-size:10px;">Home</div>
-            <div style="font-size:10px; color:#888;">Coming Soon</div>
-            <div style="font-size:10px; color:#888;">Downloads</div>
         </div>
     </div>
 
     <script>
-        // THIS IS THE FAIL-SAFE: If image takes too long, it still opens
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('login-screen').style.display = 'flex';
-            }, 2000); 
-        });
+        // Automatic start timer
+        setTimeout(function() {
+            document.getElementById('force-btn').style.display = 'block';
+            document.getElementById('status').innerText = 'Taking too long?';
+        }, 3000);
+
+        function startApp() {
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
 
         function showProfiles() {
             document.getElementById('login-screen').style.display = 'none';
@@ -149,7 +100,9 @@
             document.getElementById('profile-screen').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
         }
-    </script>
 
+        // Run startApp automatically after 4 seconds
+        setTimeout(startApp, 4000);
+    </script>
 </body>
 </html>
