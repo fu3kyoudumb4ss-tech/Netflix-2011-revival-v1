@@ -1,102 +1,268 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Netflix</title>
+    <title>Netflix Classic</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; text-align: center; }
-        .hidden { display: none !important; }
+        body, html { 
+            background-color: #333; 
+            color: white; 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+        }
+
+        /* --- SPLASH SCREEN (13 Seconds) --- */
+        #splash-screen {
+            position: fixed; inset: 0; background-color: #b9060b;
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            position: fixed; inset: 0; background-color: #b9060b; 
+            display: none; flex-direction: column; align-items: center; padding-top: 60px; z-index: 500;
+        }
+        .sign-in-btn {
+            width: 85%; padding: 12px; border-radius: 5px; font-weight: bold;
+            background: linear-gradient(to bottom, #fefefe 0%, #d1d1d1 100%); color: #333;
+            border: none; cursor: pointer; font-size: 18px; margin-top: 20px;
+        }
+
+        /* --- GLOSSY RED HEADER --- */
+        .header {
+            background: linear-gradient(to bottom, #d30b13 0%, #b9060b 50%, #9e0509 51%, #8b0408 100%);
+            height: 44px; display: flex; justify-content: center; align-items: center;
+            border-bottom: 1px solid #000; position: relative;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .header-logo { height: 22px; }
+        .settings-btn {
+            position: absolute; left: 10px; background: linear-gradient(to bottom, #555, #222);
+            border: 1px solid #111; border-radius: 5px; padding: 5px 10px; color: white; cursor: pointer; font-size: 12px;
+        }
+
+        /* --- HOMEPAGE --- */
+        #main-content { display: none; height: calc(100% - 44px); overflow-y: auto; }
+        .row-title { font-size: 16px; font-weight: bold; margin: 15px 15px 5px; text-shadow: 0 1px 1px #000; }
+        .movie-row { display: flex; overflow-x: auto; gap: 10px; padding: 10px 15px 25px; -webkit-overflow-scrolling: touch; }
+        .movie-card { flex: 0 0 100px; text-align: center; cursor: pointer; }
+        .poster { width: 100px; height: 145px; background: #000; border: 1px solid #111; object-fit: cover; }
+        .movie-name { font-size: 11px; margin-top: 5px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* --- INFO POP-UP --- */
+        #info-modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            z-index: 3000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            width: 90%; max-width: 310px; background: #262626; border-radius: 8px;
+            overflow: hidden; border: 1px solid #444;
+        }
+        .modal-header {
+            background: linear-gradient(to bottom, #444, #1a1a1a); padding: 12px;
+            text-align: center; font-weight: bold; border-bottom: 1px solid #000;
+        }
+        .modal-body { padding: 20px; }
+        .modal-flex { display: flex; gap: 15px; margin-bottom: 15px; }
+        .modal-poster { width: 90px; height: 130px; border: 1px solid #000; }
+        .stars-display { color: #e50914; font-size: 18px; margin-bottom: 10px; }
+        .modal-desc { font-size: 13px; color: #eee; line-height: 1.4; height: 80px; overflow-y: auto; }
         
-        /* Loading */
-        #loading { position: fixed; inset: 0; background: #b1060f; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        
-        /* Login & Profiles */
-        #login, #profiles { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #b1060f; }
-        #profiles { background: #000; }
-        input { margin: 10px; padding: 10px; width: 250px; border-radius: 5px; border: none; }
-        button { padding: 10px 20px; background: #e50914; color: #fff; border: none; font-weight: bold; cursor: pointer; }
-        
-        /* Main App */
-        #app { padding: 20px; }
-        .row { display: flex; overflow-x: auto; gap: 15px; padding: 10px; }
-        .movie { flex: 0 0 120px; text-decoration: none; color: #fff; }
-        .movie img { width: 120px; height: 180px; background: #222; border-radius: 5px; object-fit: cover; }
-        
-        /* Diagnostic Log */
-        #log { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); color: lime; font-size: 10px; text-align: left; padding: 5px; pointer-events: none; }
+        .play-btn {
+            background: linear-gradient(to bottom, #e50914, #b9060b);
+            color: white; border: 1px solid #800; padding: 12px; width: 100%;
+            border-radius: 6px; font-weight: bold; font-size: 17px; cursor: pointer;
+        }
+        .close-modal { 
+            margin-top: 10px; background: linear-gradient(to bottom, #444, #222);
+            color: white; border: 1px solid #111; padding: 10px; width: 100%;
+            border-radius: 6px; font-weight: bold; cursor: pointer;
+        }
+
+        /* --- SETTINGS --- */
+        #settings-panel { display: none; position: fixed; inset: 0; background: #222; z-index: 4000; padding: 20px; overflow-y: auto; }
+        .edit-box { background: #333; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .edit-box label { font-size: 11px; color: #e50914; display: block; margin-top: 5px; }
+        .edit-box input, .edit-box select { width: 100%; background: #111; color: white; border: 1px solid #555; padding: 5px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <div id="log">Status: Initializing...</div>
+    <div id="splash-screen"><img src="flix.png" style="width:200px;"></div>
 
-    <div id="loading">
-        <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" width="150">
-        <p>Loading App...</p>
-        <button onclick="goToLogin()" style="background:white; color:black; margin-top:20px;">Manual Bypass</button>
+    <div id="login-screen">
+        <img src="flix.png" style="width:160px; margin-top: 60px;">
+        <input type="email" placeholder="Email" value="user@home.com" style="width:85%; padding:12px; margin-top:40px; border-radius:5px; border:none;">
+        <input type="password" placeholder="Password" value="1234" style="width:85%; padding:12px; margin-top:15px; border-radius:5px; border:none;">
+        <button class="sign-in-btn" onclick="enterApp()">Sign In</button>
     </div>
 
-    <div id="login" class="hidden">
-        <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" width="120">
-        <input type="text" placeholder="Email">
-        <input type="password" placeholder="Password">
-        <button onclick="goToProfiles()">Sign In</button>
+    <div id="main-content">
+        <div class="header">
+            <button class="settings-btn" onclick="toggleSettings()">⚙ Edit</button>
+            <img src="flix.png" class="header-logo">
+        </div>
+        <div id="continue-section" style="display:none;">
+            <div class="row-title">Continue Watching</div>
+            <div class="movie-row" id="continue-row"></div>
+        </div>
+        <div id="rows-container"></div>
     </div>
 
-    <div id="profiles" class="hidden">
-        <h2>Who's Watching?</h2>
-        <div onclick="goToApp()" style="cursor:pointer;">
-            <div style="width:80px; height:80px; background:#e50914; margin:auto; border-radius:5px;"></div>
-            <p>John</p>
+    <div id="info-modal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header" id="modal-title">Title</div>
+            <div class="modal-body">
+                <div class="modal-flex">
+                    <img src="" id="modal-img" class="modal-poster">
+                    <div class="modal-info-text">
+                        <div id="modal-stars" class="stars-display"></div>
+                        <div class="modal-desc" id="modal-desc">Description...</div>
+                    </div>
+                </div>
+                <button class="play-btn" onclick="startMovie()">Play</button>
+                <button class="close-modal" onclick="closeModal()">Close</button>
+            </div>
         </div>
     </div>
 
-    <div id="app" class="hidden">
-        <img src="https://drive.google.com/uc?export=view&id=1WNB_iq036r1KnDYP4Xo97uI55NaTEQRj" height="30">
-        <h3 style="text-align:left;">My List</h3>
-        <div class="row">
-            <a href="https://drive.google.com/uc?export=download&id=1FPuWu-t4ouzCOgXlt8c-H4P4IhN7yl0d" class="movie">
-                <img src="https://via.placeholder.com/120x180?text=Movie+1">
-                <p>Movie 1</p>
-            </a>
-            <a href="https://drive.google.com/uc?export=download&id=1XAYVZMwq63Y_VpjxqnNviP7bYPH0C318" class="movie">
-                <img src="https://drive.google.com/uc?export=view&id=1Wh7hljbQnIArijR7LkFdsDYKQhCR3fuK">
-                <p>Fast & Furious</p>
-            </a>
-            <a href="https://drive.google.com/uc?export=download&id=1jZM-wPJxtFB6XVkJE_LduXTo7jTfuKtp" class="movie">
-                <img src="https://drive.google.com/uc?export=view&id=1hNe1XrmfNygUFZKpaPcuiMSQyJ2AuEUw">
-                <p>2Fast 2Furious</p>
-            </a>
-        </div>
+    <div id="settings-panel">
+        <h2 style="text-align:center;">Edit Content</h2>
+        <div id="edit-list"></div>
+        <button onclick="saveAll()" style="width:100%; padding:15px; background:green; color:white; border:none; border-radius:5px; font-weight:bold;">Save Changes</button>
+        <button onclick="toggleSettings()" style="width:100%; padding:15px; background:#444; color:white; border:none; border-radius:5px; margin-top:10px;">Cancel</button>
     </div>
 
     <script>
-        const logger = document.getElementById('log');
-        function log(msg) { logger.innerText = "Status: " + msg; console.log(msg); }
+        setTimeout(() => { document.getElementById('splash-screen').style.display='none'; document.getElementById('login-screen').style.display='flex'; }, 13000);
 
-        function goToLogin() {
-            log("Moving to Login");
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('login').classList.remove('hidden');
+        let movies = [];
+        
+        // Helper function to handle auto-image pairing
+        function getImagePath(baseName) {
+            // Returns base name. The HTML will try .jpg, then fallback to .png via onerror
+            return baseName; 
         }
 
-        function goToProfiles() {
-            log("Moving to Profiles");
-            document.getElementById('login').classList.add('hidden');
-            document.getElementById('profiles').classList.remove('hidden');
+        function init() {
+            const saved = localStorage.getItem('classic_flix_data');
+            if (saved) { movies = JSON.parse(saved); } 
+            else {
+                for (let i = 1; i <= 36; i++) {
+                    movies.push({ 
+                        id: i, 
+                        name: "Movie "+i, 
+                        fileName: "movie"+i, // Just the name without extension
+                        desc: "Classic show info...", 
+                        stars: 5 
+                    });
+                }
+            }
         }
 
-        function goToApp() {
-            log("App Started");
-            document.getElementById('profiles').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
+        function enterApp() {
+            init();
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            render();
+            checkCont();
         }
 
-        // Auto-run after 3 seconds
-        window.onload = function() {
-            log("Page loaded. Starting timer...");
-            setTimeout(goToLogin, 3000);
-        };
+        function render() {
+            const container = document.getElementById('rows-container');
+            container.innerHTML = '';
+            const rowTitles = ["New to You", "Trending", "Action", "Drama", "Comedy", "Sci-Fi"];
+            for (let r = 0; r < 6; r++) {
+                let html = `<div class="row-title">${rowTitles[r]}</div><div class="movie-row">`;
+                for (let c = 0; c < 6; c++) {
+                    let m = movies[r * 6 + c];
+                    // Try .jpg, if it fails, try .png
+                    html += `<div class="movie-card" onclick="openModal(${m.id})">
+                                <img src="${m.fileName}.jpg" class="poster" onerror="if (this.src.indexOf('.jpg') !== -1) this.src='${m.fileName}.png';">
+                                <div class="movie-name">${m.name}</div>
+                             </div>`;
+                }
+                html += `</div>`;
+                container.innerHTML += html;
+            }
+        }
+
+        let currentId = null;
+        function openModal(id) {
+            currentId = id;
+            let m = movies.find(x => x.id == id);
+            document.getElementById('modal-title').innerText = m.name;
+            // Apply same logic to modal poster
+            const modalImg = document.getElementById('modal-img');
+            modalImg.src = m.fileName + ".jpg";
+            modalImg.onerror = function() { if (this.src.indexOf('.jpg') !== -1) this.src = m.fileName + ".png"; };
+            
+            document.getElementById('modal-desc').innerText = m.desc;
+            document.getElementById('modal-stars').innerText = "★".repeat(m.stars) + "☆".repeat(5 - m.stars);
+            document.getElementById('info-modal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('info-modal').style.display = 'none'; }
+        
+        function startMovie() { 
+            let m = movies.find(x => x.id == currentId); 
+            localStorage.setItem('last_id', m.id); 
+            window.location.href = m.fileName + ".mp4"; 
+        }
+
+        function checkCont() {
+            const id = localStorage.getItem('last_id');
+            if (id) {
+                let m = movies.find(x => x.id == id);
+                document.getElementById('continue-section').style.display = 'block';
+                document.getElementById('continue-row').innerHTML = `
+                    <div class="movie-card" onclick="openModal(${m.id})">
+                        <img src="${m.fileName}.jpg" class="poster" onerror="if (this.src.indexOf('.jpg') !== -1) this.src='${m.fileName}.png';">
+                        <div class="movie-name">${m.name}</div>
+                    </div>`;
+            }
+        }
+
+        function toggleSettings() {
+            const p = document.getElementById('settings-panel');
+            if(p.style.display === 'block') p.style.display = 'none';
+            else {
+                p.style.display = 'block';
+                const list = document.getElementById('edit-list');
+                list.innerHTML = '';
+                movies.forEach(m => {
+                    list.innerHTML += `<div class="edit-box">
+                        <label>Display Name</label><input type="text" id="n-${m.id}" value="${m.name}">
+                        <label>File Base Name (no .mp4/.jpg)</label><input type="text" id="f-${m.id}" value="${m.fileName}">
+                        <label>Stars (1-5)</label>
+                        <select id="s-${m.id}">
+                            <option value="1" ${m.stars==1?'selected':''}>1 Star</option>
+                            <option value="2" ${m.stars==2?'selected':''}>2 Stars</option>
+                            <option value="3" ${m.stars==3?'selected':''}>3 Stars</option>
+                            <option value="4" ${m.stars==4?'selected':''}>4 Stars</option>
+                            <option value="5" ${m.stars==5?'selected':''}>5 Stars</option>
+                        </select>
+                        <label>Description</label><input type="text" id="d-${m.id}" value="${m.desc}">
+                    </div>`;
+                });
+            }
+        }
+
+        function saveAll() {
+            movies.forEach(m => {
+                m.name = document.getElementById('n-'+m.id).value;
+                m.fileName = document.getElementById('f-'+m.id).value;
+                m.desc = document.getElementById('d-'+m.id).value;
+                m.stars = parseInt(document.getElementById('s-'+m.id).value);
+            });
+            localStorage.setItem('classic_flix_data', JSON.stringify(movies));
+            render();
+            checkCont();
+            toggleSettings();
+        }
     </script>
 </body>
 </html>
